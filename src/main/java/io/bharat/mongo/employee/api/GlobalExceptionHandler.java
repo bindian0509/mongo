@@ -8,6 +8,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -51,6 +54,39 @@ public class GlobalExceptionHandler {
 						HttpStatus.BAD_REQUEST.getReasonPhrase(),
 						"Validation failed",
 						errors));
+	}
+
+	@ExceptionHandler(BadCredentialsException.class)
+	public ResponseEntity<ApiError> handleBadCredentials(BadCredentialsException ex) {
+		log.warn("Authentication failed: {}", ex.getMessage());
+		return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+				.body(new ApiError(Instant.now(),
+						HttpStatus.UNAUTHORIZED.value(),
+						HttpStatus.UNAUTHORIZED.getReasonPhrase(),
+						"Invalid username or password",
+						Map.of()));
+	}
+
+	@ExceptionHandler(AuthenticationException.class)
+	public ResponseEntity<ApiError> handleAuthentication(AuthenticationException ex) {
+		log.warn("Unauthorized access: {}", ex.getMessage());
+		return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+				.body(new ApiError(Instant.now(),
+						HttpStatus.UNAUTHORIZED.value(),
+						HttpStatus.UNAUTHORIZED.getReasonPhrase(),
+						"Authentication required",
+						Map.of()));
+	}
+
+	@ExceptionHandler(AccessDeniedException.class)
+	public ResponseEntity<ApiError> handleAccessDenied(AccessDeniedException ex) {
+		log.warn("Access denied: {}", ex.getMessage());
+		return ResponseEntity.status(HttpStatus.FORBIDDEN)
+				.body(new ApiError(Instant.now(),
+						HttpStatus.FORBIDDEN.value(),
+						HttpStatus.FORBIDDEN.getReasonPhrase(),
+						"Access denied",
+						Map.of()));
 	}
 
 	@ExceptionHandler(NotFoundException.class)

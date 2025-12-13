@@ -12,14 +12,80 @@
     {
       "key": "employeeId",
       "value": ""
+    },
+    {
+      "key": "authUsername",
+      "value": "admin"
+    },
+    {
+      "key": "authPassword",
+      "value": "changeit"
+    },
+    {
+      "key": "token",
+      "value": ""
     }
   ],
   "item": [
     {
+      "name": "Login (get JWT)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const json = pm.response.json();",
+              "if (json && json.token) {",
+              "    pm.collectionVariables.set(\"token\", json.token);",
+              "    pm.test(\"Saved JWT token\", function () {",
+              "        pm.expect(pm.collectionVariables.get(\"token\")).to.not.be.empty;",
+              "    });",
+              "} else {",
+              "    pm.test(\"Token not returned\", function () {",
+              "        pm.expect.fail(\"No token in response\");",
+              "    });",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"{{authUsername}}\",\n  \"password\": \"{{authPassword}}\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/login",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "auth",
+            "login"
+          ]
+        }
+      }
+    },
+    {
       "name": "List employees",
       "request": {
         "method": "GET",
-        "header": [],
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}",
+            "type": "text"
+          }
+        ],
         "url": {
           "raw": "{{baseUrl}}/api/employees",
           "host": [
@@ -40,6 +106,11 @@
           {
             "key": "Content-Type",
             "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}",
+            "type": "text"
           }
         ],
         "body": {
@@ -62,7 +133,13 @@
       "name": "Get employee by id",
       "request": {
         "method": "GET",
-        "header": [],
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}",
+            "type": "text"
+          }
+        ],
         "url": {
           "raw": "{{baseUrl}}/api/employees/{{employeeId}}",
           "host": [
@@ -84,6 +161,11 @@
           {
             "key": "Content-Type",
             "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}",
+            "type": "text"
           }
         ],
         "body": {
@@ -107,7 +189,13 @@
       "name": "Delete employee",
       "request": {
         "method": "DELETE",
-        "header": [],
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}",
+            "type": "text"
+          }
+        ],
         "url": {
           "raw": "{{baseUrl}}/api/employees/{{employeeId}}",
           "host": [
