@@ -18,10 +18,12 @@ import io.bharat.mongo.security.JwtTokenProvider;
 import io.bharat.mongo.security.dto.LoginRequest;
 import io.bharat.mongo.security.dto.RefreshRequest;
 import io.bharat.mongo.security.dto.TokenPairResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/auth")
+@Tag(name = "Auth", description = "Authentication and token refresh")
 public class AuthController {
 
 	private static final Logger log = LoggerFactory.getLogger(AuthController.class);

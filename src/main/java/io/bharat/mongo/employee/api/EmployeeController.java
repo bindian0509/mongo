@@ -20,11 +20,15 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import io.bharat.mongo.employee.dto.EmployeeRequest;
 import io.bharat.mongo.employee.dto.EmployeeResponse;
 import io.bharat.mongo.employee.service.EmployeeService;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/employees")
 @Validated
+@Tag(name = "Employees", description = "Employee CRUD operations")
+@SecurityRequirement(name = "bearerAuth")
 public class EmployeeController {
 
 	private static final Logger log = LoggerFactory.getLogger(EmployeeController.class);

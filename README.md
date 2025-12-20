@@ -48,6 +48,11 @@ Configure via env vars (defaults live in `src/main/resources/application.propert
 - `PUT /api/employees/{id}` – update
 - `DELETE /api/employees/{id}` – delete
 
+## API Docs (Swagger / OpenAPI)
+- Swagger UI: `http://localhost:8080/swagger-ui/index.html`
+- OpenAPI JSON: `http://localhost:8080/v3/api-docs`
+- Use the “Authorize” button in Swagger UI and paste `Bearer <accessToken>` to call secured endpoints.
+
 ## Postman Collection
 Import `postman/employee-mongo.postman_collection.json`.
 - Run **Login (get JWT)** to store `accessToken` and `refreshToken` in collection variables.
