@@ -36,7 +36,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 			throws ServletException, IOException {
 		String token = resolveToken(request);
 
-		if (StringUtils.hasText(token) && tokenProvider.validateToken(token)) {
+		if (StringUtils.hasText(token) && tokenProvider.validateAccessToken(token)) {
 			var authentication = tokenProvider.getAuthentication(token, userDetailsService);
 			if (authentication instanceof AbstractAuthenticationToken authenticationToken) {
 				authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));

@@ -14,7 +14,9 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Component;
 
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
+import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
@@ -23,51 +25,91 @@ import io.jsonwebtoken.security.Keys;
 public class JwtTokenProvider {
 
 	private static final Logger log = LoggerFactory.getLogger(JwtTokenProvider.class);
+	private static final String TOKEN_TYPE_CLAIM = "token_type";
+	private static final String TYPE_ACCESS = "access";
+	private static final String TYPE_REFRESH = "refresh";
 
 	private final SecretKey secretKey;
-	private final long expirationMillis;
+	private final long accessExpirationMillis;
+	private final long refreshExpirationMillis;
 
 	public JwtTokenProvider(
 			@Value("${security.jwt.secret:change-me-change-me-change-me-change-me}") String secret,
-			@Value("${security.jwt.expiration-ms:3600000}") long expirationMillis) {
+			@Value("${security.jwt.expiration-ms:3600000}") long accessExpirationMillis,
+			@Value("${security.jwt.refresh-expiration-ms:2592000000}") long refreshExpirationMillis) {
 		this.secretKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
-		this.expirationMillis = expirationMillis;
+		this.accessExpirationMillis = accessExpirationMillis;
+		this.refreshExpirationMillis = refreshExpirationMillis;
 	}
 
-	public String generateToken(Authentication authentication) {
-		Date now = new Date();
-		Date expiry = new Date(now.getTime() + expirationMillis);
+	public String generateAccessToken(Authentication authentication) {
+		return generateToken(authentication.getName(), accessExpirationMillis, TYPE_ACCESS);
+	}
 
-		return Jwts.builder()
-				.setSubject(authentication.getName())
-				.setIssuedAt(now)
-				.setExpiration(expiry)
-				.signWith(secretKey, SignatureAlgorithm.HS256)
-				.compact();
+	public String generateRefreshToken(Authentication authentication) {
+		return generateToken(authentication.getName(), refreshExpirationMillis, TYPE_REFRESH);
 	}
 
 	public Authentication getAuthentication(String token, UserDetailsService userDetailsService) {
-		String username = Jwts.parserBuilder()
-				.setSigningKey(secretKey)
-				.build()
-				.parseClaimsJws(token)
-				.getBody()
-				.getSubject();
+		Claims claims = parseClaims(token);
+		validateTokenType(claims, TYPE_ACCESS);
+
+		String username = claims.getSubject();
 
 		UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 		return new UsernamePasswordAuthenticationToken(userDetails, token, userDetails.getAuthorities());
 	}
 
-	public boolean validateToken(String token) {
+	public boolean validateAccessToken(String token) {
+		return validateTokenWithType(token, TYPE_ACCESS);
+	}
+
+	public boolean validateRefreshToken(String token) {
+		return validateTokenWithType(token, TYPE_REFRESH);
+	}
+
+	public String extractUsernameFromRefreshToken(String token) {
+		Claims claims = parseClaims(token);
+		validateTokenType(claims, TYPE_REFRESH);
+		return claims.getSubject();
+	}
+
+	private String generateToken(String subject, long expiryMillis, String type) {
+		Date now = new Date();
+		Date expiry = new Date(now.getTime() + expiryMillis);
+
+		return Jwts.builder()
+				.setSubject(subject)
+				.setIssuedAt(now)
+				.setExpiration(expiry)
+				.claim(TOKEN_TYPE_CLAIM, type)
+				.signWith(secretKey, SignatureAlgorithm.HS256)
+				.compact();
+	}
+
+	private boolean validateTokenWithType(String token, String expectedType) {
 		try {
-			Jwts.parserBuilder()
-					.setSigningKey(secretKey)
-					.build()
-					.parseClaimsJws(token);
+			Claims claims = parseClaims(token);
+			validateTokenType(claims, expectedType);
 			return true;
 		} catch (JwtException | IllegalArgumentException ex) {
 			log.warn("Invalid JWT token: {}", ex.getMessage());
 			return false;
+		}
+	}
+
+	private Claims parseClaims(String token) {
+		Jws<Claims> jws = Jwts.parserBuilder()
+				.setSigningKey(secretKey)
+				.build()
+				.parseClaimsJws(token);
+		return jws.getBody();
+	}
+
+	private void validateTokenType(Claims claims, String expectedType) {
+		String tokenType = claims.get(TOKEN_TYPE_CLAIM, String.class);
+		if (!expectedType.equals(tokenType)) {
+			throw new JwtException("Unexpected token type: " + tokenType);
 		}
 	}
 }

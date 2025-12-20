@@ -22,7 +22,11 @@
       "value": "changeit"
     },
     {
-      "key": "token",
+      "key": "accessToken",
+      "value": ""
+    },
+    {
+      "key": "refreshToken",
       "value": ""
     }
   ],
@@ -35,14 +39,16 @@
           "script": {
             "exec": [
               "const json = pm.response.json();",
-              "if (json && json.token) {",
-              "    pm.collectionVariables.set(\"token\", json.token);",
-              "    pm.test(\"Saved JWT token\", function () {",
-              "        pm.expect(pm.collectionVariables.get(\"token\")).to.not.be.empty;",
+              "if (json && json.accessToken && json.refreshToken) {",
+              "    pm.collectionVariables.set(\"accessToken\", json.accessToken);",
+              "    pm.collectionVariables.set(\"refreshToken\", json.refreshToken);",
+              "    pm.test(\"Saved JWT tokens\", function () {",
+              "        pm.expect(pm.collectionVariables.get(\"accessToken\")).to.not.be.empty;",
+              "        pm.expect(pm.collectionVariables.get(\"refreshToken\")).to.not.be.empty;",
               "    });",
               "} else {",
-              "    pm.test(\"Token not returned\", function () {",
-              "        pm.expect.fail(\"No token in response\");",
+              "    pm.test(\"Tokens not returned\", function () {",
+              "        pm.expect.fail(\"No access/refresh token in response\");",
               "    });",
               "}"
             ],
@@ -76,13 +82,63 @@
       }
     },
     {
+      "name": "Refresh token",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const json = pm.response.json();",
+              "if (json && json.accessToken && json.refreshToken) {",
+              "    pm.collectionVariables.set(\"accessToken\", json.accessToken);",
+              "    pm.collectionVariables.set(\"refreshToken\", json.refreshToken);",
+              "    pm.test(\"Refreshed tokens saved\", function () {",
+              "        pm.expect(pm.collectionVariables.get(\"accessToken\")).to.not.be.empty;",
+              "        pm.expect(pm.collectionVariables.get(\"refreshToken\")).to.not.be.empty;",
+              "    });",
+              "} else {",
+              "    pm.test(\"Refresh failed\", function () {",
+              "        pm.expect.fail(\"No tokens in refresh response\");",
+              "    });",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/refresh",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "auth",
+            "refresh"
+          ]
+        }
+      }
+    },
+    {
       "name": "List employees",
       "request": {
         "method": "GET",
         "header": [
           {
             "key": "Authorization",
-            "value": "Bearer {{token}}",
+            "value": "Bearer {{accessToken}}",
             "type": "text"
           }
         ],
@@ -109,7 +165,7 @@
           },
           {
             "key": "Authorization",
-            "value": "Bearer {{token}}",
+            "value": "Bearer {{accessToken}}",
             "type": "text"
           }
         ],
@@ -136,7 +192,7 @@
         "header": [
           {
             "key": "Authorization",
-            "value": "Bearer {{token}}",
+            "value": "Bearer {{accessToken}}",
             "type": "text"
           }
         ],
@@ -164,7 +220,7 @@
           },
           {
             "key": "Authorization",
-            "value": "Bearer {{token}}",
+            "value": "Bearer {{accessToken}}",
             "type": "text"
           }
         ],
@@ -192,7 +248,7 @@
         "header": [
           {
             "key": "Authorization",
-            "value": "Bearer {{token}}",
+            "value": "Bearer {{accessToken}}",
             "type": "text"
           }
         ],
