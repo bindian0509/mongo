@@ -1,6 +1,6 @@
 # Employee Mongo CRUD (Spring Boot + MongoDB + JWT)
 
-[![Java CI with Maven](https://github.com/bharat-verma/mongo/actions/workflows/maven.yml/badge.svg)](https://github.com/bharat-verma/mongo/actions/workflows/maven.yml)
+[![Java CI with Maven](https://github.com/bindian0509/mongo/actions/workflows/maven.yml/badge.svg)](https://github.com/bindian0509/mongo/actions/workflows/maven.yml)
 
 Secure REST API for employee CRUD operations backed by MongoDB. Authentication uses JWT access tokens plus refresh tokens; all API routes are protected except login and refresh.
 
