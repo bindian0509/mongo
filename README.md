@@ -108,6 +108,19 @@ The project includes both unit tests and RestAssured-based API integration tests
 
 GitHub Actions runs tests automatically on push/PR to `main`. The workflow starts a MongoDB service container with matching credentials.
 
+## AWS ECS Deployment
+
+For production deployment on AWS ECS with DocumentDB (MongoDB-compatible), see the detailed guide:
+
+📘 **[Deployment Guide](.aws/DEPLOYMENT.md)**
+
+Key files for deployment:
+
+- `Dockerfile` - Multi-stage build for containerization
+- `.github/workflows/deploy-ecs.yml` - CI/CD pipeline
+- `.aws/task-definition.json` - ECS task configuration
+- `.aws/infrastructure.tf` - Terraform IaC for AWS resources
+
 ## Notes
 
 - App is stateless (JWT); CSRF is disabled by design for API use.
